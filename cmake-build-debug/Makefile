@@ -39,19 +39,19 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /cygdrive/c/Users/natan/.CLion2019.3/system/cygwin_cmake/bin/cmake.exe
+CMAKE_COMMAND = /cygdrive/c/Users/inbal/.CLion2019.3/system/cygwin_cmake/bin/cmake.exe
 
 # The command to remove a file.
-RM = /cygdrive/c/Users/natan/.CLion2019.3/system/cygwin_cmake/bin/cmake.exe -E remove -f
+RM = /cygdrive/c/Users/inbal/.CLion2019.3/system/cygwin_cmake/bin/cmake.exe -E remove -f
 
 # Escaping for special characters.
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /cygdrive/c/Users/natan/OS/ex3
+CMAKE_SOURCE_DIR = /cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /cygdrive/c/Users/natan/OS/ex3/cmake-build-debug
+CMAKE_BINARY_DIR = /cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3/cmake-build-debug
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -59,7 +59,7 @@ CMAKE_BINARY_DIR = /cygdrive/c/Users/natan/OS/ex3/cmake-build-debug
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
-	/cygdrive/c/Users/natan/.CLion2019.3/system/cygwin_cmake/bin/cmake.exe -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/cygdrive/c/Users/inbal/.CLion2019.3/system/cygwin_cmake/bin/cmake.exe -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : rebuild_cache
 
 # Special rule for the target rebuild_cache
@@ -70,7 +70,7 @@ rebuild_cache/fast: rebuild_cache
 # Special rule for the target edit_cache
 edit_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
-	/cygdrive/c/Users/natan/.CLion2019.3/system/cygwin_cmake/bin/cmake.exe -E echo No\ interactive\ CMake\ dialog\ available.
+	/cygdrive/c/Users/inbal/.CLion2019.3/system/cygwin_cmake/bin/cmake.exe -E echo No\ interactive\ CMake\ dialog\ available.
 .PHONY : edit_cache
 
 # Special rule for the target edit_cache
@@ -80,9 +80,9 @@ edit_cache/fast: edit_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /cygdrive/c/Users/natan/OS/ex3/cmake-build-debug/CMakeFiles /cygdrive/c/Users/natan/OS/ex3/cmake-build-debug/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3/cmake-build-debug/CMakeFiles /cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3/cmake-build-debug/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /cygdrive/c/Users/natan/OS/ex3/cmake-build-debug/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3/cmake-build-debug/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -122,6 +122,33 @@ ex3: cmake_check_build_system
 ex3/fast:
 	$(MAKE) -f CMakeFiles/ex3.dir/build.make CMakeFiles/ex3.dir/build
 .PHONY : ex3/fast
+
+Atomic/atomicdemo.o: Atomic/atomicdemo.cpp.o
+
+.PHONY : Atomic/atomicdemo.o
+
+# target to build an object file
+Atomic/atomicdemo.cpp.o:
+	$(MAKE) -f CMakeFiles/ex3.dir/build.make CMakeFiles/ex3.dir/Atomic/atomicdemo.cpp.o
+.PHONY : Atomic/atomicdemo.cpp.o
+
+Atomic/atomicdemo.i: Atomic/atomicdemo.cpp.i
+
+.PHONY : Atomic/atomicdemo.i
+
+# target to preprocess a source file
+Atomic/atomicdemo.cpp.i:
+	$(MAKE) -f CMakeFiles/ex3.dir/build.make CMakeFiles/ex3.dir/Atomic/atomicdemo.cpp.i
+.PHONY : Atomic/atomicdemo.cpp.i
+
+Atomic/atomicdemo.s: Atomic/atomicdemo.cpp.s
+
+.PHONY : Atomic/atomicdemo.s
+
+# target to generate assembly for a file
+Atomic/atomicdemo.cpp.s:
+	$(MAKE) -f CMakeFiles/ex3.dir/build.make CMakeFiles/ex3.dir/Atomic/atomicdemo.cpp.s
+.PHONY : Atomic/atomicdemo.cpp.s
 
 MapReduceClient.o: MapReduceClient.cpp.o
 
@@ -213,6 +240,9 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... ex3"
 	@echo "... edit_cache"
+	@echo "... Atomic/atomicdemo.o"
+	@echo "... Atomic/atomicdemo.i"
+	@echo "... Atomic/atomicdemo.s"
 	@echo "... MapReduceClient.o"
 	@echo "... MapReduceClient.i"
 	@echo "... MapReduceClient.s"
