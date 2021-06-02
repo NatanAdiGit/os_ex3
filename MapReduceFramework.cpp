@@ -3,42 +3,68 @@
 //
 
 #include <pthread.h>
+#include <stdlib.h>
 #include "MapReduceFramework.h"
 
-IntermediateVec libInterVec;
-OutputVec libOutputVec;
-int numOfThreads;
-pthread_t *threads;
 
+typedef struct JobContext {
+    IntermediateVec *interVec;
+    OutputVec *outputVec;
+    int numOfThreads;
+    pthread_t *threads;
+
+
+}JobContext;
 
 typedef struct ClientHolder {
     const MapReduceClient* client;
     const InputPair* pair;
+    const IntermediateVec* libInterVec;
 }ClientHolder;
 
 
 void * ClientMap(void* args) {
     ClientHolder holder = *(ClientHolder*)args;
-    holder.client->map(holder.pair->first, holder.pair->second, &libInterVec)
+    holder.client->map(holder.pair->first, holder.pair->second, &holder.libInterVec);
 }
 
 JobHandle startMapReduceJob(const MapReduceClient& client,
                             const InputVec& inputVec, OutputVec& outputVec,
                             int multiThreadLevel) {
-    numOfThreads = multiThreadLevel;
+    JobContext jobContext{};
 
-    threads = new pthread_t[multiThreadLevel];
+    jobContext.interVec = new IntermediateVec[inputVec.size()];
+    jobContext.threads = new pthread_t[multiThreadLevel];
+    jobContext.numOfThreads = multiThreadLevel;
 
-    for (int i = 0; i < numOfThreads && i < inputVec.size() ; ++i) {
-        ClientHolder clientHolder;
-        clientHolder.client = &client;
-        clientHolder.pair = &inputVec[i];
-        pthread_create(threads + i, NULL, ClientMap, (void *) &clientHolder);
+    int counter = inputVec.size();
+    while (counter > 0)
+    {
+        for (int i = 0; i < jobContext.numOfThreads && i < counter; ++i)
+        {
+            ClientHolder clientHolder;
+            clientHolder.client = &client;
+            clientHolder.pair = &inputVec[i];
+            clientHolder.libInterVec = &jobContext.interVec[i];
+            pthread_create(jobContext.threads + i, NULL, ClientMap, (void *) &clientHolder);
+            counter--;
+        }
+
+        for (int i = 0; i < jobContext.numOfThreads; ++i) {
+            if (pthread_join(jobContext.threads[i], NULL) != 0) {
+                exit(EXIT_FAILURE);
+            }
+        }
+
+
+
     }
 
 
 
-    libOutputVec = outputVec;
+
+
+    jobContext.outputVec = &outputVec;
 }
 
 void waitForJob(JobHandle job) {
