@@ -43,14 +43,14 @@ typedef struct ReduceThreadContext {
 } ReduceThreadContext;
 
 void *mapThread(void *args) {
-    auto * holder = (MapThreadContext *) args;
+    auto *holder = (MapThreadContext *) args;
     holder->client->map(holder->pair->first, holder->pair->second, &holder->intermediateVec);
     std::sort(holder->intermediateVec->begin(), holder->intermediateVec->end());
     holder->atomic_counter++;
 }
 
 void *reduceThread(void *args) {
-    JobContext *holder = (JobContext *) args;
+    auto *holder = (JobContext *) args;
     holder->client->reduce(&holder->interVec[holder->reduceCounter], &holder);
 }
 
@@ -67,16 +67,16 @@ JobHandle startMapReduceJob(const MapReduceClient &client,
     jobContext->atomic_counter->store(0);
     int counter = inputVec.size();
 
-    while (counter > 0) {
+    while (counter > jobContext->atomic_counter->load()) {
         for (int i = 0; i < jobContext->numOfThreads && i < counter; ++i) {
 //            jobContext->sortedVec->push_back(new IntermediateVec());
             MapThreadContext clientHolder;
             clientHolder.client = &client;
-            clientHolder.pair = &inputVec[i];
-            clientHolder.intermediateVec = &jobContext->sortedVec->at(i);
+            clientHolder.pair = &inputVec[jobContext->atomic_counter->load()];
+            clientHolder.intermediateVec = &jobContext->sortedVec->at(jobContext->atomic_counter->load());
             clientHolder.atomic_counter = jobContext->atomic_counter;
             pthread_create(jobContext->threads + i, NULL, mapThread, (void *) &clientHolder);
-            counter--;
+//            counter--;
         }
 
 
@@ -85,11 +85,9 @@ JobHandle startMapReduceJob(const MapReduceClient &client,
                 // todo - print error mess
                 exit(EXIT_FAILURE);
             }
-            else
-            {
-                jobContext->state.percentage = jobContext->atomic_counter->load() /
-                        (float) inputVec.size();
-            }
+//            else {
+//                jobContext->state.percentage = jobContext->atomic_counter->load() / (float) inputVec.size();
+//            }
         }
     }
 
@@ -105,21 +103,16 @@ JobHandle startMapReduceJob(const MapReduceClient &client,
     jobContext->atomic_counter->store(0);
 
 
-
     jobContext->outputVec = &outputVec;
     return static_cast<JobHandle>(jobContext);
 }
 
-void shuffle(void *args)
-{
+void shuffle(void *args) {
     auto *holder = (JobContext *) args;
-    if (!holder->sortedVec->empty())
-    {
+    if (!holder->sortedVec->empty()) {
         holder->shuffledVec = new std::vector<IntermediateVec>(holder->sortedVec->at(0).size());
-        for (unsigned long j = holder->sortedVec->at(0).size() - 1; j >= 0; --j)
-        {
-            for (int i = 0; i < holder->sortedVec->size(); ++i)
-            {
+        for (unsigned long j = holder->sortedVec->at(0).size() - 1; j >= 0; --j) {
+            for (int i = 0; i < holder->sortedVec->size(); ++i) {
                 holder->shuffledVec->at(j).push_back(holder->sortedVec->at(i).back());
                 holder->sortedVec->at(i).pop_back();
             }
@@ -162,5 +155,5 @@ void emit3(K3 *key, V3 *value, void *context) {
  * to use join in main func? (start job)
  * if so then whats the deal with wait
  *
- *
+ * where to update percentage
  */
