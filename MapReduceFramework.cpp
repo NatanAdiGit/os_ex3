@@ -14,11 +14,19 @@
 typedef struct JobContext {
     std::vector<IntermediateVec> *sortedVec;
     std::vector<IntermediateVec> *shuffledVec;
+    const MapReduceClient *client;
+
+    IntermediateVec *interVec;
     OutputVec *outputVec;
     int numOfThreads;
+    int reduceCounter = 0; //todo probably not good
+
     pthread_t *threads;
+
     JobState state;
-    std::atomic<int>* atomic_counter;
+
+    pthread_mutex_t emit3;
+    std::atomic<int> *atomic_counter;
 } JobContext;
 
 typedef struct MapThreadContext {
@@ -42,8 +50,8 @@ void *mapThread(void *args) {
 }
 
 void *reduceThread(void *args) {
-    auto * holder = (ReduceThreadContext *) args;
-    holder->client->reduce(holder->intermediateVec, &holder->outputVec);
+    JobContext *holder = (JobContext *) args;
+    holder->client->reduce(&holder->interVec[holder->reduceCounter], &holder);
 }
 
 JobHandle startMapReduceJob(const MapReduceClient &client,
@@ -52,6 +60,8 @@ JobHandle startMapReduceJob(const MapReduceClient &client,
     auto *jobContext = new JobContext();
 
     jobContext->sortedVec = new std::vector<IntermediateVec>(inputVec.size());
+    //todo release
+    jobContext->interVec = new IntermediateVec[inputVec.size()];
     jobContext->threads = new pthread_t[multiThreadLevel];
     jobContext->numOfThreads = multiThreadLevel;
     jobContext->atomic_counter->store(0);
@@ -69,6 +79,7 @@ JobHandle startMapReduceJob(const MapReduceClient &client,
             counter--;
         }
 
+
         for (int i = 0; i < jobContext->numOfThreads; ++i) {
             if (pthread_join(jobContext->threads[i], NULL) != 0) { // todo - checks its kill the thread
                 // todo - print error mess
@@ -81,6 +92,7 @@ JobHandle startMapReduceJob(const MapReduceClient &client,
             }
         }
     }
+
 
     if (jobContext->state.percentage == HUNDRED_PERCENT)
         jobContext->state.stage = SHUFFLE_STAGE;
@@ -104,12 +116,12 @@ void shuffle(void *args)
     if (!holder->sortedVec->empty())
     {
         holder->shuffledVec = new std::vector<IntermediateVec>(holder->sortedVec->at(0).size());
-        for (long j = holder->sortedVec->at(0).size() - 1; j >= 0; ++j)
+        for (unsigned long j = holder->sortedVec->at(0).size() - 1; j >= 0; --j)
         {
             for (int i = 0; i < holder->sortedVec->size(); ++i)
             {
                 holder->shuffledVec->at(j).push_back(holder->sortedVec->at(i).back());
-                holder->sortedVec->pop_back();
+                holder->sortedVec->at(i).pop_back();
             }
             holder->atomic_counter++;
         }
@@ -122,17 +134,33 @@ void waitForJob(JobHandle job) {
 }
 
 void getJobState(JobHandle job, JobState *state) {
-
+    JobContext jobContext = *(JobContext *) job;
+    state->stage = jobContext.state.stage;
+    state->percentage = jobContext.state.percentage;
 }
 
 void closeJobHandle(JobHandle job) {
-
+    //todo destroy mutex
 }
 
 void emit2(K2 *key, V2 *value, void *context) {
-
+    auto *vec = (IntermediateVec *) context;
+    vec->push_back(IntermediatePair(key, value));
 }
 
 void emit3(K3 *key, V3 *value, void *context) {
-
+    auto *job = (JobContext *) context;
+    pthread_mutex_lock(&job->emit3);
+    job->outputVec->push_back(OutputPair(key, value));
+    pthread_mutex_unlock(&job->emit3);
 }
+
+
+/*
+ * questions!
+ *
+ * to use join in main func? (start job)
+ * if so then whats the deal with wait
+ *
+ *
+ */
