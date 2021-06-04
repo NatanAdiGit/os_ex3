@@ -34,19 +34,19 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /cygdrive/c/Users/inbal/.CLion2019.3/system/cygwin_cmake/bin/cmake.exe
+CMAKE_COMMAND = /cygdrive/c/Users/natan/.CLion2019.3/system/cygwin_cmake/bin/cmake.exe
 
 # The command to remove a file.
-RM = /cygdrive/c/Users/inbal/.CLion2019.3/system/cygwin_cmake/bin/cmake.exe -E remove -f
+RM = /cygdrive/c/Users/natan/.CLion2019.3/system/cygwin_cmake/bin/cmake.exe -E remove -f
 
 # Escaping for special characters.
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3
+CMAKE_SOURCE_DIR = /cygdrive/c/Users/natan/OS/ex3
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3/cmake-build-debug
+CMAKE_BINARY_DIR = /cygdrive/c/Users/natan/OS/ex3/cmake-build-debug
 
 # Include any dependencies generated for this target.
 include CMakeFiles/ex3.dir/depend.make
@@ -59,55 +59,55 @@ include CMakeFiles/ex3.dir/flags.make
 
 CMakeFiles/ex3.dir/main.cpp.o: CMakeFiles/ex3.dir/flags.make
 CMakeFiles/ex3.dir/main.cpp.o: ../main.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/ex3.dir/main.cpp.o"
-	/usr/bin/c++.exe  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/ex3.dir/main.cpp.o -c /cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3/main.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/cygdrive/c/Users/natan/OS/ex3/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/ex3.dir/main.cpp.o"
+	/usr/bin/c++.exe  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/ex3.dir/main.cpp.o -c /cygdrive/c/Users/natan/OS/ex3/main.cpp
 
 CMakeFiles/ex3.dir/main.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/ex3.dir/main.cpp.i"
-	/usr/bin/c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3/main.cpp > CMakeFiles/ex3.dir/main.cpp.i
+	/usr/bin/c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /cygdrive/c/Users/natan/OS/ex3/main.cpp > CMakeFiles/ex3.dir/main.cpp.i
 
 CMakeFiles/ex3.dir/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/ex3.dir/main.cpp.s"
-	/usr/bin/c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3/main.cpp -o CMakeFiles/ex3.dir/main.cpp.s
+	/usr/bin/c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /cygdrive/c/Users/natan/OS/ex3/main.cpp -o CMakeFiles/ex3.dir/main.cpp.s
 
 CMakeFiles/ex3.dir/MapReduceClient.cpp.o: CMakeFiles/ex3.dir/flags.make
 CMakeFiles/ex3.dir/MapReduceClient.cpp.o: ../MapReduceClient.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/ex3.dir/MapReduceClient.cpp.o"
-	/usr/bin/c++.exe  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/ex3.dir/MapReduceClient.cpp.o -c /cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3/MapReduceClient.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/cygdrive/c/Users/natan/OS/ex3/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/ex3.dir/MapReduceClient.cpp.o"
+	/usr/bin/c++.exe  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/ex3.dir/MapReduceClient.cpp.o -c /cygdrive/c/Users/natan/OS/ex3/MapReduceClient.cpp
 
 CMakeFiles/ex3.dir/MapReduceClient.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/ex3.dir/MapReduceClient.cpp.i"
-	/usr/bin/c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3/MapReduceClient.cpp > CMakeFiles/ex3.dir/MapReduceClient.cpp.i
+	/usr/bin/c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /cygdrive/c/Users/natan/OS/ex3/MapReduceClient.cpp > CMakeFiles/ex3.dir/MapReduceClient.cpp.i
 
 CMakeFiles/ex3.dir/MapReduceClient.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/ex3.dir/MapReduceClient.cpp.s"
-	/usr/bin/c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3/MapReduceClient.cpp -o CMakeFiles/ex3.dir/MapReduceClient.cpp.s
+	/usr/bin/c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /cygdrive/c/Users/natan/OS/ex3/MapReduceClient.cpp -o CMakeFiles/ex3.dir/MapReduceClient.cpp.s
 
 CMakeFiles/ex3.dir/MapReduceFramework.cpp.o: CMakeFiles/ex3.dir/flags.make
 CMakeFiles/ex3.dir/MapReduceFramework.cpp.o: ../MapReduceFramework.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/ex3.dir/MapReduceFramework.cpp.o"
-	/usr/bin/c++.exe  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/ex3.dir/MapReduceFramework.cpp.o -c /cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3/MapReduceFramework.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/cygdrive/c/Users/natan/OS/ex3/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/ex3.dir/MapReduceFramework.cpp.o"
+	/usr/bin/c++.exe  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/ex3.dir/MapReduceFramework.cpp.o -c /cygdrive/c/Users/natan/OS/ex3/MapReduceFramework.cpp
 
 CMakeFiles/ex3.dir/MapReduceFramework.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/ex3.dir/MapReduceFramework.cpp.i"
-	/usr/bin/c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3/MapReduceFramework.cpp > CMakeFiles/ex3.dir/MapReduceFramework.cpp.i
+	/usr/bin/c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /cygdrive/c/Users/natan/OS/ex3/MapReduceFramework.cpp > CMakeFiles/ex3.dir/MapReduceFramework.cpp.i
 
 CMakeFiles/ex3.dir/MapReduceFramework.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/ex3.dir/MapReduceFramework.cpp.s"
-	/usr/bin/c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3/MapReduceFramework.cpp -o CMakeFiles/ex3.dir/MapReduceFramework.cpp.s
+	/usr/bin/c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /cygdrive/c/Users/natan/OS/ex3/MapReduceFramework.cpp -o CMakeFiles/ex3.dir/MapReduceFramework.cpp.s
 
 CMakeFiles/ex3.dir/Atomic/atomicdemo.cpp.o: CMakeFiles/ex3.dir/flags.make
 CMakeFiles/ex3.dir/Atomic/atomicdemo.cpp.o: ../Atomic/atomicdemo.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/ex3.dir/Atomic/atomicdemo.cpp.o"
-	/usr/bin/c++.exe  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/ex3.dir/Atomic/atomicdemo.cpp.o -c /cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3/Atomic/atomicdemo.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/cygdrive/c/Users/natan/OS/ex3/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/ex3.dir/Atomic/atomicdemo.cpp.o"
+	/usr/bin/c++.exe  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/ex3.dir/Atomic/atomicdemo.cpp.o -c /cygdrive/c/Users/natan/OS/ex3/Atomic/atomicdemo.cpp
 
 CMakeFiles/ex3.dir/Atomic/atomicdemo.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/ex3.dir/Atomic/atomicdemo.cpp.i"
-	/usr/bin/c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3/Atomic/atomicdemo.cpp > CMakeFiles/ex3.dir/Atomic/atomicdemo.cpp.i
+	/usr/bin/c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /cygdrive/c/Users/natan/OS/ex3/Atomic/atomicdemo.cpp > CMakeFiles/ex3.dir/Atomic/atomicdemo.cpp.i
 
 CMakeFiles/ex3.dir/Atomic/atomicdemo.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/ex3.dir/Atomic/atomicdemo.cpp.s"
-	/usr/bin/c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3/Atomic/atomicdemo.cpp -o CMakeFiles/ex3.dir/Atomic/atomicdemo.cpp.s
+	/usr/bin/c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /cygdrive/c/Users/natan/OS/ex3/Atomic/atomicdemo.cpp -o CMakeFiles/ex3.dir/Atomic/atomicdemo.cpp.s
 
 # Object files for target ex3
 ex3_OBJECTS = \
@@ -125,7 +125,7 @@ ex3.exe: CMakeFiles/ex3.dir/MapReduceFramework.cpp.o
 ex3.exe: CMakeFiles/ex3.dir/Atomic/atomicdemo.cpp.o
 ex3.exe: CMakeFiles/ex3.dir/build.make
 ex3.exe: CMakeFiles/ex3.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX executable ex3.exe"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/cygdrive/c/Users/natan/OS/ex3/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX executable ex3.exe"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/ex3.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -138,6 +138,6 @@ CMakeFiles/ex3.dir/clean:
 .PHONY : CMakeFiles/ex3.dir/clean
 
 CMakeFiles/ex3.dir/depend:
-	cd /cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3/cmake-build-debug && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3 /cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3 /cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3/cmake-build-debug /cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3/cmake-build-debug /cygdrive/c/Users/inbal/CLionProjects/huji_os/os_ex3/cmake-build-debug/CMakeFiles/ex3.dir/DependInfo.cmake --color=$(COLOR)
+	cd /cygdrive/c/Users/natan/OS/ex3/cmake-build-debug && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /cygdrive/c/Users/natan/OS/ex3 /cygdrive/c/Users/natan/OS/ex3 /cygdrive/c/Users/natan/OS/ex3/cmake-build-debug /cygdrive/c/Users/natan/OS/ex3/cmake-build-debug /cygdrive/c/Users/natan/OS/ex3/cmake-build-debug/CMakeFiles/ex3.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/ex3.dir/depend
 
