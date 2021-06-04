@@ -7,11 +7,13 @@
 #include <atomic>
 #include <algorithm>
 #include "MapReduceFramework.h"
+#include "MapReduceClient.h"
 
 #define HUNDRED_PERCENT 100.0
 
 typedef struct JobContext {
-    IntermediateVec *interVec;
+    std::vector<IntermediateVec> *sortedVec;
+    std::vector<IntermediateVec> *shuffledVec;
     OutputVec *outputVec;
     int numOfThreads;
     pthread_t *threads;
@@ -33,41 +35,42 @@ typedef struct ReduceThreadContext {
 } ReduceThreadContext;
 
 void *mapThread(void *args) {
-    MapThreadContext holder = *(MapThreadContext *) args;
-    holder.client->map(holder.pair->first, holder.pair->second, &holder.intermediateVec);
-    std::sort(holder.intermediateVec->begin(), holder.intermediateVec->end());
-    (*holder.atomic_counter)++;
+    auto * holder = (MapThreadContext *) args;
+    holder->client->map(holder->pair->first, holder->pair->second, &holder->intermediateVec);
+    std::sort(holder->intermediateVec->begin(), holder->intermediateVec->end());
+    holder->atomic_counter++;
 }
 
 void *reduceThread(void *args) {
-    ReduceThreadContext holder = *(ReduceThreadContext *) args;
-    holder.client->reduce(holder.intermediateVec, &holder.outputVec);
+    auto * holder = (ReduceThreadContext *) args;
+    holder->client->reduce(holder->intermediateVec, &holder->outputVec);
 }
 
 JobHandle startMapReduceJob(const MapReduceClient &client,
                             const InputVec &inputVec, OutputVec &outputVec,
                             int multiThreadLevel) {
-    JobContext *jobContext = new JobContext();
+    auto *jobContext = new JobContext();
 
-    jobContext->interVec = new IntermediateVec[inputVec.size()];
+    jobContext->sortedVec = new std::vector<IntermediateVec>(inputVec.size());
     jobContext->threads = new pthread_t[multiThreadLevel];
     jobContext->numOfThreads = multiThreadLevel;
     jobContext->atomic_counter->store(0);
-
     int counter = inputVec.size();
+
     while (counter > 0) {
         for (int i = 0; i < jobContext->numOfThreads && i < counter; ++i) {
+//            jobContext->sortedVec->push_back(new IntermediateVec());
             MapThreadContext clientHolder;
             clientHolder.client = &client;
             clientHolder.pair = &inputVec[i];
-            clientHolder.intermediateVec = &jobContext->interVec[i];
+            clientHolder.intermediateVec = &jobContext->sortedVec->at(i);
             clientHolder.atomic_counter = jobContext->atomic_counter;
             pthread_create(jobContext->threads + i, NULL, mapThread, (void *) &clientHolder);
             counter--;
         }
 
         for (int i = 0; i < jobContext->numOfThreads; ++i) {
-            if (pthread_join(jobContext->threads[i], NULL) != 0) {
+            if (pthread_join(jobContext->threads[i], NULL) != 0) { // todo - checks its kill the thread
                 // todo - print error mess
                 exit(EXIT_FAILURE);
             }
@@ -86,13 +89,31 @@ JobHandle startMapReduceJob(const MapReduceClient &client,
         exit(EXIT_FAILURE);
     }
 
-
-
+    // initialize the atomic counter for the shuffle phase
+    jobContext->atomic_counter->store(0);
 
 
 
     jobContext->outputVec = &outputVec;
     return static_cast<JobHandle>(jobContext);
+}
+
+void shuffle(void *args)
+{
+    auto *holder = (JobContext *) args;
+    if (!holder->sortedVec->empty())
+    {
+        holder->shuffledVec = new std::vector<IntermediateVec>(holder->sortedVec->at(0).size());
+        for (long j = holder->sortedVec->at(0).size() - 1; j >= 0; ++j)
+        {
+            for (int i = 0; i < holder->sortedVec->size(); ++i)
+            {
+                holder->shuffledVec->at(j).push_back(holder->sortedVec->at(i).back());
+                holder->sortedVec->pop_back();
+            }
+            holder->atomic_counter++;
+        }
+    }
 }
 
 
