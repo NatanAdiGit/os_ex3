@@ -8,145 +8,246 @@
 #include <algorithm>
 #include "MapReduceFramework.h"
 #include "MapReduceClient.h"
+#include "Barrier/Barrier.h"
 
 #define HUNDRED_PERCENT 100.0
 
 typedef struct JobContext {
-    std::vector<IntermediateVec> *sortedVec;
-    std::vector<IntermediateVec> *shuffledVec;
-    const MapReduceClient *client;
-
-    IntermediateVec *interVec;
-    OutputVec *outputVec;
-    int numOfThreads;
-    int reduceCounter = 0; //todo probably not good
+//    const MapReduceClient *client;
 
     pthread_t *threads;
 
-    JobState state;
+    const InputVec *inputVec;
 
-    pthread_mutex_t emit3;
-    std::atomic<int> *atomic_counter;
+    OutputVec *outputVec;
+
+    std::vector<IntermediateVec> *sortedVec = nullptr;
+
+    std::vector<IntermediateVec> *shuffledVec = nullptr;
+
+    std::atomic<int> *atomic_counter_to_process; // counts how many input pairs were processed
+    std::atomic<int> *atomic_counter_stage;
+    std::atomic<int> *atomic_counter_processed;
+
+    pthread_mutex_t emit3; //should be the same for all
 } JobContext;
 
-typedef struct MapThreadContext {
+typedef struct ThreadContext {
     const MapReduceClient *client;
-    const InputPair *pair;
-    const IntermediateVec *intermediateVec;
-    std::atomic<int> *atomic_counter;
-} MapThreadContext;
+    int threadID;
 
-typedef struct ReduceThreadContext {
-    const MapReduceClient *client;
-    const IntermediateVec *intermediateVec;
-    const OutputVec *outputVec;
-} ReduceThreadContext;
+    const InputVec *inputVec;
+    OutputVec *outputVec;
+    std::vector<IntermediateVec> *sortedVec;
+    std::vector<IntermediateVec> *shuffledVec;
 
-void *mapThread(void *args) {
-    auto *holder = (MapThreadContext *) args;
-    holder->client->map(holder->pair->first, holder->pair->second, &holder->intermediateVec);
-    std::sort(holder->intermediateVec->begin(), holder->intermediateVec->end());
-    holder->atomic_counter++;
+    Barrier *barrier;
+
+    std::atomic<int> *atomic_counter_to_process; // checks which input pair to process
+    std::atomic<int> *atomic_counter_stage;      // sees what stage
+    std::atomic<int> *atomic_counter_processed;  // counts how many input pairs were processed
+
+    pthread_mutex_t emit3; //should be the same for all
+} ThreadContext;
+
+
+void shuffle(ThreadContext *threadContext);
+
+void mapStage(const ThreadContext *threadContext);
+
+void reduceStage(ThreadContext *&threadContext);
+
+void moveToNextStage(const ThreadContext *threadContext, int oldStage, int newStage);
+
+void *thread(void *args) {
+    auto *threadContext = (ThreadContext *) args;
+
+    moveToNextStage(threadContext, UNDEFINED_STAGE, MAP_STAGE);
+
+    //map
+    mapStage(threadContext);
+
+    //barrier
+    threadContext->barrier->barrier();
+
+    moveToNextStage(threadContext, MAP_STAGE, SHUFFLE_STAGE);
+
+    //shuffle
+    // only thread 0 does that
+    if (threadContext->threadID == 0) {
+        shuffle(threadContext);
+    }
+
+    //barrier
+    threadContext->barrier->barrier();
+
+    moveToNextStage(threadContext, SHUFFLE_STAGE, REDUCE_STAGE);
+
+    //reduce
+    reduceStage(threadContext);
+
 }
 
-void *reduceThread(void *args) {
-    auto *holder = (JobContext *) args;
-    holder->client->reduce(&holder->interVec[holder->reduceCounter], &holder);
+void moveToNextStage(const ThreadContext *threadContext, int oldStage, int newStage) {
+    //todo maybe 'if' not needed
+    if (threadContext->atomic_counter_stage->load() == oldStage) {
+        threadContext->atomic_counter_to_process->store(0);
+        threadContext->atomic_counter_processed->store(0);
+        threadContext->atomic_counter_stage->store(newStage);
+    }
 }
 
-JobHandle startMapReduceJob(const MapReduceClient &client,
-                            const InputVec &inputVec, OutputVec &outputVec,
-                            int multiThreadLevel) {
-    auto *jobContext = new JobContext();
+void mapStage(ThreadContext *threadContext) {
+    //todo init sorted vec
+    threadContext->sortedVec = new std::vector<IntermediateVec>(threadContext->inputVec->size());
 
-    jobContext->sortedVec = new std::vector<IntermediateVec>(inputVec.size());
-    //todo release
-    jobContext->interVec = new IntermediateVec[inputVec.size()];
-    jobContext->threads = new pthread_t[multiThreadLevel];
-    jobContext->numOfThreads = multiThreadLevel;
-    jobContext->atomic_counter->store(0);
-    int counter = inputVec.size();
+    while (threadContext->atomic_counter_to_process->load() < threadContext->inputVec->size()) {
 
-    while (counter > jobContext->atomic_counter->load()) {
-        for (int i = 0; i < jobContext->numOfThreads && i < counter; ++i) {
-//            jobContext->sortedVec->push_back(new IntermediateVec());
-            MapThreadContext clientHolder;
-            clientHolder.client = &client;
-            clientHolder.pair = &inputVec[jobContext->atomic_counter->load()];
-            clientHolder.intermediateVec = &jobContext->sortedVec->at(jobContext->atomic_counter->load());
-            clientHolder.atomic_counter = jobContext->atomic_counter;
-            pthread_create(jobContext->threads + i, NULL, mapThread, (void *) &clientHolder);
-//            counter--;
+        // --------- map
+        // increment counter
+        int old_value = (*(threadContext->atomic_counter_to_process))++;
+        auto pair = &threadContext->inputVec->at(old_value);
+        auto unSortedInterVec = &threadContext->sortedVec->at(old_value);
+        threadContext->client->map(pair->first, pair->second, &unSortedInterVec);
+
+
+        // --------- sort
+        std::sort(unSortedInterVec->begin(), unSortedInterVec->end());
+
+        (*(threadContext->atomic_counter_processed))++;
+    }
+}
+
+void reduceStage(ThreadContext *&threadContext) {
+    while (threadContext->atomic_counter_to_process->load() < threadContext->shuffledVec->size()) {
+
+        // --------- reduce
+        // increment counter
+        int old_value = (*(threadContext->atomic_counter_to_process))++;
+        auto pair = &threadContext->shuffledVec->at(old_value);
+        threadContext->client->reduce(pair, &threadContext);
+
+        (*(threadContext->atomic_counter_processed))++;
+    }
+}
+
+void shuffle(ThreadContext *threadContext) {
+    if (threadContext->sortedVec->empty()) {
+        //todo something
+        exit(5);
+    }
+    threadContext->shuffledVec = new std::vector<IntermediateVec>();
+//    for (int k = 0; k < threadContext->sortedVec->size(); ++k) {
+    while (!threadContext->sortedVec->empty()) {
+        auto max = threadContext->sortedVec->at(0).back().first;
+        for (int i = 0; i < threadContext->sortedVec->size(); ++i) {
+            //find max last key
+            if (threadContext->sortedVec->at(i).back().first > max)
+                max = threadContext->sortedVec->at(i).back().first;
         }
 
-
-        for (int i = 0; i < jobContext->numOfThreads; ++i) {
-            if (pthread_join(jobContext->threads[i], NULL) != 0) { // todo - checks its kill the thread
-                // todo - print error mess
-                exit(EXIT_FAILURE);
+        IntermediateVec intermediateVec;
+        for (int i = 0; i < threadContext->sortedVec->size(); ++i) {
+            if (threadContext->sortedVec->at(i).empty())
+                continue;
+            //insert only if equals to max
+            auto currKey = threadContext->sortedVec->at(i).back().first;
+            if (!(currKey < max) && !(max < currKey)) { // do not change! it should be like that!
+                intermediateVec.push_back(threadContext->sortedVec->at(i).back());
+                threadContext->sortedVec->at(i).pop_back();
             }
-//            else {
-//                jobContext->state.percentage = jobContext->atomic_counter->load() / (float) inputVec.size();
-//            }
         }
+        threadContext->shuffledVec->insert(threadContext->shuffledVec->begin(), intermediateVec);
+        (*(threadContext->atomic_counter_processed))++;
     }
 
 
-    if (jobContext->state.percentage == HUNDRED_PERCENT)
-        jobContext->state.stage = SHUFFLE_STAGE;
-    else { // it is an error cause we did not finished all the map and sort tasks.
-        // todo - print error mess
-        exit(EXIT_FAILURE);
+//    for (unsigned long j = threadContext->sortedVec->at(0).size() - 1; j >= 0; --j) {
+//        IntermediateVec intermediateVec;
+//        for (int i = 0; i < threadContext->sortedVec->size(); ++i) {
+//            //todo cant assume they are the same key
+//
+//            threadContext->shuffledVec->at(j).push_back(threadContext->sortedVec->at(i).back());
+//            threadContext->sortedVec->at(i).pop_back();
+//        }
+//        (*(threadContext->atomic_counter_processed))++;
+
+//    threadContext->shuffledVec = new std::vector<IntermediateVec>(threadContext->sortedVec->at(0).size());
+//    for (unsigned long j = threadContext->sortedVec->at(0).size() - 1; j >= 0; --j) {
+//        for (int i = 0; i < threadContext->sortedVec->size(); ++i) {
+//            //todo cant assume they are the same key
+//            threadContext->shuffledVec->at(j).push_back(threadContext->sortedVec->at(i).back());
+//            threadContext->sortedVec->at(i).pop_back();
+//        }
+//        (*(threadContext->atomic_counter_processed))++;
+//    }
     }
 
-    // initialize the atomic counter for the shuffle phase
-    jobContext->atomic_counter->store(0);
+    JobHandle startMapReduceJob(const MapReduceClient &client,
+                                const InputVec &inputVec, OutputVec &outputVec,
+                                int multiThreadLevel) {
+
+        //init job context
+        auto *jobContext = new JobContext();
+//    jobContext->inputVec
 
 
-    jobContext->outputVec = &outputVec;
-    return static_cast<JobHandle>(jobContext);
-}
+        //init threads
+//    for (int i = 0; i < MT_LEVEL; ++i) {
+//        contexts[i] = {i, &atomic_counter};
+//    }
+//
+//    for (int i = 0; i < MT_LEVEL; ++i) {
+//        pthread_create(threads + i, NULL, count, contexts + i);
+//    }
 
-void shuffle(void *args) {
-    auto *holder = (JobContext *) args;
-    if (!holder->sortedVec->empty()) {
-        holder->shuffledVec = new std::vector<IntermediateVec>(holder->sortedVec->at(0).size());
-        for (unsigned long j = holder->sortedVec->at(0).size() - 1; j >= 0; --j) {
-            for (int i = 0; i < holder->sortedVec->size(); ++i) {
-                holder->shuffledVec->at(j).push_back(holder->sortedVec->at(i).back());
-                holder->sortedVec->at(i).pop_back();
-            }
-            holder->atomic_counter++;
+//    jobContext->outputVec = &outputVec;
+        return static_cast<JobHandle>(jobContext);
+    }
+
+    void waitForJob(JobHandle job) {
+
+        //joins threads
+    }
+
+    void getJobState(JobHandle job, JobState *state) {
+        //todo mutex maybe?
+        JobContext jobContext = *(JobContext *) job;
+
+        state->stage = static_cast<stage_t>(jobContext.atomic_counter_stage->load());
+        float percentage = jobContext.atomic_counter_processed->load();
+        switch (jobContext.atomic_counter_stage->load()) {
+            case MAP_STAGE:
+                percentage /= jobContext.inputVec->size();
+                break;
+            case SHUFFLE_STAGE:
+                percentage = jobContext.shuffledVec ? percentage / jobContext.shuffledVec->size() : 0.0f;
+                break;
+            case REDUCE_STAGE:
+                percentage /= jobContext.shuffledVec->size();
+                break;
+            default:
+                percentage = 0.0f;
+                break;
         }
+        state->percentage = 100.0f * percentage;
     }
-}
 
+    void closeJobHandle(JobHandle job) {
+        //todo destroy mutex
+    }
 
-void waitForJob(JobHandle job) {
+    void emit2(K2 *key, V2 *value, void *context) {
+        auto *vec = (IntermediateVec *) context;
+        vec->push_back(IntermediatePair(key, value));
+    }
 
-}
-
-void getJobState(JobHandle job, JobState *state) {
-    JobContext jobContext = *(JobContext *) job;
-    state->stage = jobContext.state.stage;
-    state->percentage = jobContext.state.percentage;
-}
-
-void closeJobHandle(JobHandle job) {
-    //todo destroy mutex
-}
-
-void emit2(K2 *key, V2 *value, void *context) {
-    auto *vec = (IntermediateVec *) context;
-    vec->push_back(IntermediatePair(key, value));
-}
-
-void emit3(K3 *key, V3 *value, void *context) {
-    auto *job = (JobContext *) context;
-    pthread_mutex_lock(&job->emit3);
-    job->outputVec->push_back(OutputPair(key, value));
-    pthread_mutex_unlock(&job->emit3);
-}
+    void emit3(K3 *key, V3 *value, void *context) {
+        auto *job = (ThreadContext *) context;
+        pthread_mutex_lock(&job->emit3);
+        job->outputVec->push_back(OutputPair(key, value));
+        pthread_mutex_unlock(&job->emit3);
+    }
 
 
 /*
