@@ -103,6 +103,7 @@ JobHandle startMapReduceJob(const MapReduceClient &client,
     jobContext->atomic_counter->store(0);
 
 
+
     jobContext->outputVec = &outputVec;
     return static_cast<JobHandle>(jobContext);
 }
@@ -111,8 +112,10 @@ void shuffle(void *args) {
     auto *holder = (JobContext *) args;
     if (!holder->sortedVec->empty()) {
         holder->shuffledVec = new std::vector<IntermediateVec>(holder->sortedVec->at(0).size());
-        for (unsigned long j = holder->sortedVec->at(0).size() - 1; j >= 0; --j) {
-            for (int i = 0; i < holder->sortedVec->size(); ++i) {
+        for (long j = holder->sortedVec->at(0).size() - 1; j >= 0; --j)
+        {
+            for (int i = 0; i < holder->sortedVec->size(); ++i)
+            {
                 holder->shuffledVec->at(j).push_back(holder->sortedVec->at(i).back());
                 holder->sortedVec->at(i).pop_back();
             }
