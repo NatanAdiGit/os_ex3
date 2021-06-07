@@ -17,6 +17,8 @@ typedef struct JobContext {
 
     pthread_t *threads;
 
+    int parallelThreadsNum;
+
     const InputVec *inputVec;
 
     OutputVec *outputVec;
@@ -184,26 +186,6 @@ void shuffle(ThreadContext *threadContext) {
     }
 
 
-
-//typedef struct ThreadContext {
-//    const MapReduceClient *client;
-//    int threadID;
-//
-//    const InputVec *inputVec;
-//    OutputVec *outputVec;
-//    std::vector<IntermediateVec> *sortedVec;
-//    std::vector<IntermediateVec> *shuffledVec;
-//
-//    Barrier *barrier;
-//
-//    std::atomic<int> *atomic_counter_to_process; // checks which input pair to process
-//    std::atomic<int> *atomic_counter_stage;      // sees what stage
-//    std::atomic<int> *atomic_counter_processed;  // counts how many input pairs were processed
-//
-//    pthread_mutex_t emit3; //should be the same for all
-//} ThreadContext;
-
-
 JobHandle startMapReduceJob(const MapReduceClient &client,
                                 const InputVec &inputVec, OutputVec &outputVec,
                                 int multiThreadLevel) {
@@ -211,11 +193,13 @@ JobHandle startMapReduceJob(const MapReduceClient &client,
         //init job context
         auto *jobContext = new JobContext();
         jobContext->threads = new pthread_t[multiThreadLevel];
+        jobContext->parallelThreadsNum = multiThreadLevel;
         jobContext->inputVec = &inputVec;
+        jobContext->outputVec = &outputVec;
         jobContext->sortedVec = new std::vector<IntermediateVec>(inputVec.size());
         jobContext->shuffledVec = new std::vector<IntermediateVec>();
         jobContext->atomic_counter_to_process->store(0);
-        jobContext->atomic_counter_stage->store(0);
+        jobContext->atomic_counter_stage->store(0); // todo - the stage is 0! change?
         jobContext->atomic_counter_processed->store(0);
         // todo - Inbal initialize the  pthread_mutex_t emit3 of the job
 
@@ -224,36 +208,26 @@ JobHandle startMapReduceJob(const MapReduceClient &client,
             newThreadContext->client = &client;
             newThreadContext->threadID = i;
             newThreadContext->inputVec = jobContext->inputVec;
+            newThreadContext->outputVec = jobContext->outputVec;
             newThreadContext->sortedVec = jobContext->sortedVec;
             newThreadContext->shuffledVec = jobContext->shuffledVec;
             // todo - Inbal initialize the barrier
-
+            newThreadContext->emit3 = jobContext->emit3;
+            newThreadContext->atomic_counter_processed = jobContext->atomic_counter_processed;
+            newThreadContext->atomic_counter_to_process = jobContext->atomic_counter_to_process;
+            newThreadContext->atomic_counter_stage = jobContext->atomic_counter_stage; // todo - the stage is 0! change?
+            pthread_create(jobContext->threads + i, NULL, thread, &newThreadContext);
         }
 
-
-
-
-
-
-//    jobContext->inputVec
-
-
-        //init threads
-//    for (int i = 0; i < MT_LEVEL; ++i) {
-//        contexts[i] = {i, &atomic_counter};
-//    }
-//
-//    for (int i = 0; i < MT_LEVEL; ++i) {
-//        pthread_create(threads + i, NULL, count, contexts + i);
-//    }
-
-//    jobContext->outputVec = &outputVec;
         return static_cast<JobHandle>(jobContext);
     }
 
     void waitForJob(JobHandle job) {
 
-        //joins threads
+        auto jobContext = (JobContext *) job;
+        for (int i = 0; i < jobContext->parallelThreadsNum; ++i) {
+            pthread_join(jobContext->threads[i], NULL);
+        }
     }
 
     void getJobState(JobHandle job, JobState *state) {
@@ -267,10 +241,11 @@ JobHandle startMapReduceJob(const MapReduceClient &client,
                 percentage /= jobContext.inputVec->size();
                 break;
             case SHUFFLE_STAGE:
-                percentage = jobContext.shuffledVec->size() == 0 ? 0.0f : percentage / jobContext.shuffledVec->size();
+                percentage = jobContext.shuffledVec->empty() ? 0.0f : percentage / jobContext.shuffledVec->size();
                 break;
             case REDUCE_STAGE:
-                percentage = jobContext.shuffledVec->size() == 0 ? 0.0f : percentage / jobContext.shuffledVec->size();
+                // todo - mistake? I will be very upset
+                percentage = jobContext.shuffledVec->empty() ? 0.0f : percentage / jobContext.shuffledVec->size();
                 break;
             default:
                 percentage = 0.0f;
