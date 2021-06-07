@@ -1,7 +1,7 @@
 #include "MapReduceFramework.h"
 #include <cstdio>
 #include <string>
-#include <array>
+#include <array>pthread_create
 #include <unistd.h>
 
 class VString : public V1 {

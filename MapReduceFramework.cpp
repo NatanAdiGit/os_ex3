@@ -38,8 +38,8 @@ typedef struct ThreadContext {
 
     const InputVec *inputVec;
     OutputVec *outputVec;
-    std::vector<IntermediateVec> *sortedVec;
-    std::vector<IntermediateVec> *shuffledVec;
+    std::vector<IntermediateVec> *sortedVec = nullptr;
+    std::vector<IntermediateVec> *shuffledVec = nullptr;
 
     Barrier *barrier;
 
@@ -98,8 +98,8 @@ void moveToNextStage(const ThreadContext *threadContext, int oldStage, int newSt
 }
 
 void mapStage(ThreadContext *threadContext) {
-    //todo init sorted vec
-    threadContext->sortedVec = new std::vector<IntermediateVec>(threadContext->inputVec->size());
+//    //todo Nati took it down, we can not initialize the vector for each thread
+//    threadContext->sortedVec = new std::vector<IntermediateVec>(threadContext->inputVec->size());
 
     while (threadContext->atomic_counter_to_process->load() < threadContext->inputVec->size()) {
 
@@ -110,8 +110,8 @@ void mapStage(ThreadContext *threadContext) {
         auto unSortedInterVec = &threadContext->sortedVec->at(old_value);
         threadContext->client->map(pair->first, pair->second, &unSortedInterVec);
 
-
         // --------- sort
+        // todo - maybe there will be a problem
         std::sort(unSortedInterVec->begin(), unSortedInterVec->end());
 
         (*(threadContext->atomic_counter_processed))++;
@@ -136,7 +136,7 @@ void shuffle(ThreadContext *threadContext) {
         //todo something
         exit(5);
     }
-    threadContext->shuffledVec = new std::vector<IntermediateVec>();
+//    threadContext->shuffledVec = new std::vector<IntermediateVec>();
 //    for (int k = 0; k < threadContext->sortedVec->size(); ++k) {
     while (!threadContext->sortedVec->empty()) {
         auto max = threadContext->sortedVec->at(0).back().first;
@@ -183,12 +183,58 @@ void shuffle(ThreadContext *threadContext) {
 //    }
     }
 
-    JobHandle startMapReduceJob(const MapReduceClient &client,
+
+
+//typedef struct ThreadContext {
+//    const MapReduceClient *client;
+//    int threadID;
+//
+//    const InputVec *inputVec;
+//    OutputVec *outputVec;
+//    std::vector<IntermediateVec> *sortedVec;
+//    std::vector<IntermediateVec> *shuffledVec;
+//
+//    Barrier *barrier;
+//
+//    std::atomic<int> *atomic_counter_to_process; // checks which input pair to process
+//    std::atomic<int> *atomic_counter_stage;      // sees what stage
+//    std::atomic<int> *atomic_counter_processed;  // counts how many input pairs were processed
+//
+//    pthread_mutex_t emit3; //should be the same for all
+//} ThreadContext;
+
+
+JobHandle startMapReduceJob(const MapReduceClient &client,
                                 const InputVec &inputVec, OutputVec &outputVec,
                                 int multiThreadLevel) {
 
         //init job context
         auto *jobContext = new JobContext();
+        jobContext->threads = new pthread_t[multiThreadLevel];
+        jobContext->inputVec = &inputVec;
+        jobContext->sortedVec = new std::vector<IntermediateVec>(inputVec.size());
+        jobContext->shuffledVec = new std::vector<IntermediateVec>();
+        jobContext->atomic_counter_to_process->store(0);
+        jobContext->atomic_counter_stage->store(0);
+        jobContext->atomic_counter_processed->store(0);
+        // todo - Inbal initialize the  pthread_mutex_t emit3 of the job
+
+        for (int i = 0; i < multiThreadLevel; ++i) {
+            auto *newThreadContext = new ThreadContext();
+            newThreadContext->client = &client;
+            newThreadContext->threadID = i;
+            newThreadContext->inputVec = jobContext->inputVec;
+            newThreadContext->sortedVec = jobContext->sortedVec;
+            newThreadContext->shuffledVec = jobContext->shuffledVec;
+            // todo - Inbal initialize the barrier
+
+        }
+
+
+
+
+
+
 //    jobContext->inputVec
 
 
@@ -221,10 +267,10 @@ void shuffle(ThreadContext *threadContext) {
                 percentage /= jobContext.inputVec->size();
                 break;
             case SHUFFLE_STAGE:
-                percentage = jobContext.shuffledVec ? percentage / jobContext.shuffledVec->size() : 0.0f;
+                percentage = jobContext.shuffledVec->size() == 0 ? 0.0f : percentage / jobContext.shuffledVec->size();
                 break;
             case REDUCE_STAGE:
-                percentage /= jobContext.shuffledVec->size();
+                percentage = jobContext.shuffledVec->size() == 0 ? 0.0f : percentage / jobContext.shuffledVec->size();
                 break;
             default:
                 percentage = 0.0f;
